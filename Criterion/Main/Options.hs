@@ -39,6 +39,7 @@ import Options.Applicative.Types
 import Paths_criterion (version)
 import Text.PrettyPrint.ANSI.Leijen (Doc, text)
 import qualified Data.Map as M
+import Data.Monoid
 
 -- | How to match a benchmark name.
 data MatchType = Prefix

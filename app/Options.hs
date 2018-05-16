@@ -13,6 +13,7 @@ import Data.Data (Data, Typeable)
 import GHC.Generics (Generic)
 import Paths_criterion (version)
 import Options.Applicative
+import Data.Monoid
 
 data CommandLine = Analyse [FilePath]
                  | Version

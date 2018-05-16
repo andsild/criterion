@@ -1,3 +1,4 @@
+{-# LANGUAGE Trustworthy #-}
 -- |
 -- Module      : Criterion.IO.Printf
 -- Copyright   : (c) 2009-2014 Bryan O'Sullivan
@@ -25,7 +26,7 @@ import Control.Monad.Trans (liftIO)
 import Criterion.Monad (Criterion)
 import Criterion.Types (Config(csvFile, verbosity), Verbosity(..))
 import Data.Foldable (forM_)
-import System.IO (Handle, stderr, stdout)
+import System.IO (Handle, hFlush, stderr, stdout)
 import Text.Printf (PrintfArg)
 import qualified Data.ByteString.Lazy as B
 import qualified Data.Csv as Csv
@@ -34,7 +35,7 @@ import qualified Text.Printf (HPrintfType, hPrintf)
 -- First item is the action to print now, given all the arguments
 -- gathered together so far.  The second item is the function that
 -- will take a further argument and give back a new PrintfCont.
-data PrintfCont = PrintfCont (IO ()) (PrintfArg a => a -> PrintfCont)
+data PrintfCont = PrintfCont (IO ()) (forall a . PrintfArg a => a -> PrintfCont)
 
 -- | An internal class that acts like Printf/HPrintf.
 --
@@ -47,12 +48,12 @@ class CritHPrintfType a where
 instance CritHPrintfType (Criterion a) where
   chPrintfImpl check (PrintfCont final _)
     = do x <- ask
-         when (check x) (liftIO final)
+         when (check x) (liftIO (final >> hFlush stderr >> hFlush stdout))
          return undefined
 
 instance CritHPrintfType (IO a) where
   chPrintfImpl _ (PrintfCont final _)
-    = final >> return undefined
+    = final >> hFlush stderr >> hFlush stdout >> return undefined
 
 instance (CritHPrintfType r, PrintfArg a) => CritHPrintfType (a -> r) where
   chPrintfImpl check (PrintfCont _ anotherArg) x
